@@ -1,0 +1,108 @@
+
+library(shiny)
+library(plotly)
+library(tidyverse)
+
+shinyServer(function(input, output) {
+   
+  output$plotly01 <- renderPlotly({
+    plot_ly(x=plotly01$District, y=plotly01$Nro, 
+            color = plotly01$District, type = "bar")
+  })
+  
+  output$plotly02 <- renderPlotly({
+    plot_ly(x=plotly02$Crime, y=plotly02$Nro, 
+            color = plotly02$Crime, type = "bar")
+  })
+  
+  output$plotly03 <- renderPlotly({
+    plot_ly(x=plotly03$Crime, y=plotly03$Nro, 
+            color = plotly03$Crime, type = "bar")
+  })
+  
+  output$plotly04 <- renderPlotly({
+    plot_ly(x=plotly04$Crime, y=plotly04$Nro, 
+            color = plotly04$Crime, type = "bar")
+  })
+  
+  output$plotly05 <- renderPlotly({
+    plot_ly(x=plotly05$Fecha, y=plotly05$Nro, 
+            color = plotly05$Fecha, type = "bar")
+  })
+  
+  output$plotly06 <- renderPlotly({
+    plot_ly(x=plotly06$Anio, y=plotly06$Nro, 
+            color = plotly06$Anio, type = "bar")
+  })
+  
+  output$plotly07 <- renderPlotly({
+    plot_ly(x=plotly07$Mes, y=plotly07$Nro, 
+            type = 'scatter', mode = 'lines')
+  })
+  
+  output$plotly08 <- renderPlotly({
+    plot_ly(labels=plotly08$City, values=plotly08$Nro, type = "pie")
+  })
+  
+  output$plotly09 <- renderPlotly({
+    plot_ly(x=plotly09$State, y=plotly09$sumVic, 
+            color = plotly09$State, type = "bar")
+  })
+  
+  output$plotly10 <- renderPlotly({
+    plot_ly(x=plotly10$District, y=plotly10$minVic, 
+            type = "bar", name = 'Minimo') %>%
+      add_trace(y=plotly10$maxVic, name='Maximo')
+  })
+  
+  output$plotly11 <- renderPlotly({
+    plot_ly(x=plotly11$City, y=plotly11$minVic, 
+            type = "bar", name="Minimo") %>%
+      add_trace(y=plotly11$maxVic, name="Maximo")
+  })
+  
+  output$plotly12 <- renderPlotly({
+    plot_ly(x=plotly12$Anio, y=plotly12$minVic, 
+            type = "bar", name="Minimo") %>%
+      add_trace(y=plotly12$maxVic, name="Maximo")
+  })
+  
+  output$plotly13 <- renderPlotly({
+    plot_ly(x=plotly13$Crime, y=plotly13$sdVic, 
+            color = plotly13$Crime, type = "bar")
+  })
+  
+  output$plotly14 <- renderPlotly({
+    plot_ly(x=plotly14$Crime, y=plotly14$medVic, 
+            color = plotly14$Crime, type = "bar")
+  })
+  
+  output$plotly15 <- renderPlotly({
+    plot_ly(labels=plotly15$Crime, values=plotly15$sumVic, type = "pie")
+  })
+  
+  output$plotly16 <- renderPlotly({
+    plot_ly(x=plotly16$Mes, y=plotly16$sumVic, 
+            color = plotly16$Mes, type = "bar")
+  })
+  
+  output$plotly17 <- renderPlotly({
+    plot_ly(labels=plotly17$Turno, values=plotly17$sumVic, type = "pie")
+  })
+  
+  output$plotly18 <- renderPlotly({
+    plot_ly(x=plotly18$Dia, y=plotly18$sumVic, 
+            type = 'scatter', mode = 'lines')
+  })
+  
+  output$plotly19 <- renderPlotly({
+    plot_ly(x=plotly19$Dia, y=plotly19$Nro, 
+            type = 'scatter', mode = 'lines')
+  })
+  
+  output$plotly20 <- renderPlotly({
+    plot_ly(plotly20) %>%
+      add_bars(x=reorder(plotly20$Fecha, -plotly20$sumVic), y=plotly20$sumVic)
+  })
+  
+})

@@ -1,0 +1,124 @@
+#Install packages
+install.packages("lubridate")
+install.packages("tidyr")
+install.packages("stringr")
+install.packages("ggplot2")
+
+#Go to dir
+getwd() 
+
+#Add libraries
+library("lubridate")
+library("tidyr")
+library("stringr")
+library("ggplot2")
+library("dplyr")
+
+#Read dataset
+#Fuente: https://catalog.data.gov/dataset/accidental-drug-related-deaths-january-2012-sept-2015
+datosOriginal<-read.csv("Datasets/Accidental_Drug_Related_Deaths__2012-2017.csv")
+
+#Preparación de datos
+#Separar columnas
+attach(datosOriginal)
+#Eliminar fechas en blanco
+DateBlank<-datosOriginal %>% filter(Date == "")
+datosSinBlancos<-anti_join(datosOriginal,DateBlank)
+#Generar datos limpios
+datos<-datosSinBlancos %>% separate(data = datosSinBlancos, col = Date, into = c("mes","dia","anio"),
+                                    sep = "[/]",remove = TRUE, convert = FALSE,
+                                    extra = "warn", fill = "warn")
+#Eliminar datasets inútiles
+rm(DateBlank,datosSinBlancos)
+
+#---QUERY'S---#
+#Cantidad de casos ocurridos por año
+query1<-datos %>% group_by(anio) %>% summarise(n())
+
+#Cantidad de casos ocurridos por mes
+query2<-datos
+
+#Sexo que más muertes accidentales ha tenido
+query3<-datos
+
+#Edad en la que más ocurren los accidentes
+query4<-datos
+
+#Raza/etnia con más accidentes
+query5<-datos
+
+#¿Cuál es la ciudad con más accidentes?
+query6<-datos
+
+#¿Dónde es el lugar de daño que más sucede?
+query7<-datos
+
+#Top 5 de causas de accidente
+query8<-datos
+
+#
+query9<-datos
+
+#
+query10<-datos
+
+#
+query11<-datos
+
+#
+query12<-datos
+
+#
+query13<-datos
+
+#
+query14<-datos
+
+#
+query15<-datos
+
+#
+query16<-datos
+
+#
+query17<-datos
+
+#
+query18<-datos
+
+#
+query19<-datos
+
+#
+query20<-datos
+
+#
+query21<-datos
+
+#
+query22<-datos
+
+#
+query23<-datos
+
+#
+query24<-datos
+
+#
+query25<-datos
+
+#
+query26<-datos
+
+#
+query27<-datos
+
+#
+query28<-datos
+
+#
+query29<-datos
+
+#
+query30<-datos
+

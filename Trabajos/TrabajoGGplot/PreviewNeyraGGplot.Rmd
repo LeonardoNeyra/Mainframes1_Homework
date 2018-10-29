@@ -1,0 +1,281 @@
+---
+title: "Trabajo con GGplot2 - NeyraOcaña"
+output: html_notebook
+---
+
+###Descripcion del Caso
+>Una lista de cada muerte accidental asociada con sobredosis de drogas en Connecticut desde 2012 hasta junio de 2017. El valor "Y" debajo de las diferentes columnas de cada sustancia indica que se ha detectado una sustancia determinada.
+Los datos proceden de una investigación de la Oficina del Médico Forense Jefe, que incluye el informe de toxicidad, el certificado de defunción y una investigación del lugar de los hechos.
+>Obtenido de: https://catalog.data.gov/dataset/accidental-drug-related-deaths-january-2012-sept-2015
+
+### ***Descripcion del Dataset***
+|Campo | Descripcion |
+|------|------|
+|CaseNumber|Numero de caso|
+|Mes|Mes|
+|Dia|Dia|
+|Anio|Anio|
+|Sex|Genero|
+|Race|Raza o etnia|
+|Age|Edad|
+|Residence.City|Ciudad de residencia|
+|Residence.State|Estado de residencia|
+|Residence.Country|Pais de residencia|
+|Death.City|Ciudad donde fallecio|
+|Death.State|Estado donde fallecio|
+|Death.Country|Pais donde fallecio|
+|Location|Lugar donde fallecio|
+|Descriptionofinjury|Descripcion del danio|
+|InjuryPlace|Lugar del danio|
+|ImmediateCauseA|Causa de muerte|
+
+###Importacion de Librerias
+```{r}
+library("lubridate")
+library("tidyr")
+library("stringr")
+library("ggplot2")
+library("dplyr")
+```
+
+###Lectura de Datos
+```{r}
+datosOriginal<-read.csv("Datasets/Accidental_Drug_Related_Deaths__2012-2017.csv")
+```
+
+###Preparacion de Datos
+* Eliminar Fechas en Blanco
+```{r}
+DateBlank<-datosOriginal %>% filter(Date == "")
+datosSinBlancos<-anti_join(datosOriginal,DateBlank)
+```
+* Generar Datos Limpios
+```{r}
+datos<-datosSinBlancos %>% separate(data = datosSinBlancos, col = Date, into = c("mes","dia","anio"),
+                                    sep = "[/]",remove = TRUE, convert = FALSE,
+                                    extra = "warn", fill = "warn")
+```
+* Eliminar Datasets Inutiles
+```{r}
+rm(DateBlank,datosSinBlancos)
+```
+
+###Consultas de Exploracion 1 (Grafico de Barras)
+* Cantidad de casos ocurridos por anio
+```{r}
+query1<-datos %>% group_by(anio) %>% summarise(cantidad=n())
+ggplot(query1,aes(x=anio,y=cantidad,fill=anio))+geom_bar(stat = "identity")
+```
+
+* Cantidad de casos ocurridos por mes
+```{r}
+query2<-datos %>% group_by(mes) %>% summarise(cantidad=n())
+ggplot(query2,aes(x=mes,y=cantidad,fill=mes))+geom_bar(stat = "identity")
+```
+
+* Sexo que mas muertes accidentales ha tenido
+```{r}
+query3<-datos %>% filter(Sex!="") %>% group_by(Sex) %>% summarise(cantidad=n())
+ggplot(query3,aes(x=Sex,y=cantidad,fill=Sex))+geom_bar(stat = "identity")
+```
+
+* Edad en la que mas ocurren los accidentes
+```{r}
+query4<-datos %>% filter(Age!="") %>% group_by(Age) %>% summarise(cantidad=n())
+ggplot(query4,aes(x=Age,y=cantidad,fill=cantidad))+geom_bar(stat = "identity")
+```
+
+* Raza/etnia con mas accidentes
+```{r}
+query5<-datos %>% filter(Race!="") %>% group_by(Race) %>% summarise(cantidad=n())
+ggplot(query5,aes(x=reorder(Race,cantidad),y=cantidad,fill=cantidad))+geom_bar(stat = "identity")+
+      ggplot2::coord_flip()
+```
+
+###Consultas de Exploracion 2 (Grafico de Torta)
+* Top 10 de ciudades con mas accidentes
+```{r}
+query6<-datos %>% filter(Death.City!="") %>% group_by(Death.City) %>% summarise(cantidad=n()) %>%
+        arrange(desc(cantidad)) %>% slice(1:10)
+ggplot(query6,aes(x=factor(1),y=cantidad,fill=Death.City))+ geom_bar(width=1,stat="identity")+ coord_polar("y")
+  
+```
+
+* ¿Cual es el top 8 de lugares donde las personas cometen el atentado?
+```{r}
+query7<-datos %>% filter(InjuryPlace!="") %>% group_by(InjuryPlace) %>% summarise(cantidad=n()) %>%
+        arrange(desc(cantidad)) %>% slice(1:8)
+ggplot(query7,aes(x=factor(1),y=as.factor(cantidad),fill=as.factor(InjuryPlace)))+ geom_bar(width=1,stat="identity")+ coord_polar(theta = "y",start=0)
+```
+
+* Top 5 de causas de accidente
+```{r}
+query8<-datos %>% filter(ImmediateCauseA!="") %>% group_by(ImmediateCauseA) %>% summarise(cant=n()) %>%
+        arrange(desc(cant)) %>% slice(1:5)
+ggplot(query8,aes(x=factor(1),y=cant,fill=ImmediateCauseA))+ geom_bar(width=1,stat="identity")+ coord_polar("y",start=0)
+```
+
+* ¿Cuales son las 2 descripciones de accidentes mas comunes?
+```{r}
+query9<-datos %>% filter(DescriptionofInjury!="") %>% group_by(DescriptionofInjury) %>% summarise(cant=n()) %>%
+        arrange(desc(cant)) %>% slice(1:2)
+ggplot(query9,aes(x=factor(1),y=cant,fill=DescriptionofInjury))+ geom_bar(width=1,stat="identity")+ coord_polar("y",start=0)
+```
+
+* En que mes las mujeres tienen mas accidentes mortales
+```{r}
+query10<-datos %>% filter(Sex=="Female") %>% group_by(mes) %>% summarise(cant=n())
+ggplot(query10,aes(x=factor(1),y=cant,fill=mes))+ geom_bar(width=1,stat="identity")+ coord_polar("y",start=0)
+```
+
+###Consultas de Exploracion 3 (Grafico de Puntos)
+* Hombres blancos accidentados agrupados por dia del mes
+```{r}
+query11<-datos %>% filter(Sex=="Male",Race=="White") %>% group_by(dia) %>% summarise(cant=n())
+ggplot(query11,aes(x=dia,y=cant,fill=cant))+ geom_point(stat = "identity")
+```
+
+* ¿Cual es la causa de muerte por accidente mas comun?
+```{r}
+query12<-bind_rows(datos %>% filter(Heroin=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="heroin"),
+                   datos %>% filter(Cocaine=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="cocain"),
+                   datos %>% filter(Fentanyl=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Fentanyl"),
+                   datos %>% filter(Oxycodone=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Oxycodone"),
+                   datos %>% filter(Oxymorphone=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Oxymorphone"),
+                   datos %>% filter(EtOH=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="EtOH"),
+                   datos %>% filter(Hydrocodone=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Hydrocodone"),
+                   datos %>% filter(Benzodiazepine=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Benzodiazepine"),
+                   datos %>% filter(Methadone=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Methadone"),
+                   datos %>% filter(Amphet=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Amphet"),
+                   datos %>% filter(Tramad=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Tramad"),
+                   datos %>% filter(Morphine..not.heroin.=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Morphine not heroin"),
+                   datos %>% filter(Any.Opioid=="Y") %>% summarise(cantidad=n()) %>% mutate(causa="Any Opioid"))
+ggplot(query12,aes(x=causa,y=cantidad,fill=cantidad))+ geom_point(stat = "identity")+ ggplot2::coord_flip()
+```
+
+* ¿Cuales son las dos sustancias que mas causan muertes por accidente a los hombres?
+```{r}
+query13<-bind_rows(datos %>% filter(Heroin=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="heroina"),
+                   datos %>% filter(Cocaine=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="cacaina"),
+                   datos %>% filter(Fentanyl=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Fentanyl"),
+                   datos %>% filter(Oxycodone=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Oxycodone"),
+                   datos %>% filter(Oxymorphone=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Oxymorphone"),
+                   datos %>% filter(EtOH=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="EtOH"),
+                   datos %>% filter(Hydrocodone=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Hydrocodone"),
+                   datos %>% filter(Benzodiazepine=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Benzodiazepine"),
+                   datos %>% filter(Methadone=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Methadone"),
+                   datos %>% filter(Amphet=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Amphet"),
+                   datos %>% filter(Tramad=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Tramad"),
+                   datos %>% filter(Morphine..not.heroin.=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Morphine not heroin"),
+                   datos %>% filter(Any.Opioid=="Y",Sex=="Male") %>% summarise(cantidad=n()) %>% mutate(causa="Any Opioid"))
+ggplot(query13,aes(x=causa,y=cantidad,fill=cantidad))+ geom_point(stat = "identity")+ ggplot2::coord_flip()
+```
+
+* Cantidad de hombres y mujeres que consumen heroina
+```{r}
+query14<-datos %>% filter(Heroin=="Y") %>% group_by(Sex) %>% summarise(cant=n())
+ggplot(query14,aes(x=Sex,y=cant,fill=cant))+ geom_point(stat = "identity")
+```
+
+* Las 4 razas/etnicas que mas consumen cacaine
+```{r}
+query15<-datos %>% filter(Cocaine=="Y",Race!="") %>% group_by(Race) %>% summarise(cant=n()) %>%
+        arrange(desc(cant)) %>% slice(1:4)
+ggplot(query15,aes(x=Race,y=cant,fill=cant))+ geom_point(stat = "identity")
+```
+
+###Consultas de Exploracion 4 (Grafico de Linea)
+* 10 ciudades donde provienen las personas que mas se consumen Fentanyl
+```{r}
+query16<-datos %>% filter(Fentanyl=="Y",Residence.City!="") %>% group_by(Residence.City) %>% summarise(cant=n()) %>%
+  arrange(desc(cant)) %>% slice(1:10)
+ggplot(query16,aes(x=Residence.City,y=cant,group=1,col=Residence.City))+ geom_line()
+```
+
+* 10 ciudades donde mas han muerto por consumo de Benzodiazepine
+```{r}
+query17<-datos %>% filter(Benzodiazepine=="Y",Death.City!="") %>% group_by(Death.City) %>% summarise(cant=n()) %>%
+  arrange(desc(cant)) %>% slice(1:10)
+ggplot(query17,aes(x=Death.City,y=cant,group=1,col=Death.City))+ geom_line()
+```
+
+* Lugar donde mas personas murieron accidentalmente por consumo de drogas
+```{r}
+query18<-datos %>% filter(Location!="") %>% group_by(Location) %>% summarise(cant=n()) %>% arrange(desc(cant))
+ggplot(query18,aes(x=Location,y=cant,group=1,col=Location))+ geom_line()
+```
+
+* ¿Cuales son las 5 otras sustancias mas comunes que causan estas muertes?
+```{r}
+query19<-datos %>% filter(Other!="") %>% group_by(Other) %>% summarise(cant=n()) %>% 
+  arrange(desc(cant)) %>% slice(1:5)
+ggplot(query19,aes(x=Other,y=cant,group=1,col=Other))+ geom_line()
+```
+
+* Las 5 causas de muerte relacionadas al consumo de EtOH
+```{r}
+query20<-datos %>% filter(ImmediateCauseA!="",EtOH=="Y") %>% group_by(ImmediateCauseA) %>% summarise(cant=n()) %>% 
+  arrange(desc(cant)) %>% slice(1:5)
+ggplot(query20,aes(x=ImmediateCauseA,y=cant,group=1,col=ImmediateCauseA))+ geom_line()
+```
+
+###Consultas de Exploracion 5 (Grafico de Boxplot)
+* Cantidad de muertes por pais de residencia, top 10
+```{r}
+query21<-datos %>% filter(Residence.County!="") %>% group_by(Residence.County) %>% summarise(cant=n()) %>% 
+  arrange(desc(cant)) %>% slice(1:10)
+ggplot(query21,aes(x=Residence.County,y=cant,col=Residence.County))+ geom_boxplot()
+```
+
+* ¿Cual es cantidad de muertos por accidente que consumieron cocaina por anio en un hospital
+```{r}
+query22<-datos %>% filter(Location=="Hospital",Cocaine=="Y") %>% group_by(anio) %>% summarise(cant=n())
+ggplot(query22,aes(x=anio,y=cant,col=anio))+ geom_boxplot()
+```
+
+* Lista de meses donde mas se consume heroin
+```{r}
+query23<-datos %>% filter(Heroin=="Y") %>% group_by(mes) %>% summarise(cant=n())
+ggplot(query23,aes(x=mes,y=cant,col=mes))+ geom_boxplot()
+```
+
+* ¿En que lugares fallecen negros?
+```{r}
+query24<-datos %>% filter(Race=="Black",Location!="") %>% group_by(Location) %>% summarise(cant=n())
+ggplot(query24,aes(x=Location,y=cant,col=Location))+ geom_boxplot()
+```
+
+* ¿Que es lo que mas consumen los Hispanic, cocaina o heroina?
+```{r}
+query25<-bind_rows(datos %>% filter(str_detect(Race,"Hispanic"),Cocaine=="Y") %>% summarise(cant=n()) %>% mutate(causa="Cocaina"),
+                   datos %>% filter(str_detect(Race,"Hispanic"),Heroin=="Y") %>% summarise(cant=n()) %>% mutate(causa="Heroina"))
+ggplot(query25,aes(x=causa,y=cant,col=causa))+ geom_boxplot()
+```
+
+###Consultas de Exploracion 6 (Grafico de Histograma)
+* ¿Que dias los hospitales tienen mas pacientes por accidentes por consumo de drogas?
+```{r}
+query26<-datos %>% filter(Location=="Hospital") %>% group_by(dia) %>% summarise(cant=n())
+ggplot(query26,aes(x=dia,y=cant,fill=dia))+ geom_histogram(stat = "identity")
+```
+
+* Personas que fallecieron en su residencia segun meses del anio 2017
+```{r}
+query27<-datos %>% filter(Location=="Residence",anio==2017) %>% group_by(mes) %>% summarise(cant=n())
+ggplot(query27,aes(x=mes,y=cant,fill=mes))+ geom_histogram(stat = "identity")
+```
+
+* Lugares donde mas se consume Oxycodone
+```{r}
+query28<-datos %>% filter(Oxycodone=="Y",Residence.City!="") %>% group_by(Residence.City) %>%
+  summarise(cant=n()) %>% arrange(desc(cant)) %>% slice(1:10)
+ggplot(query28,aes(x=Residence.City,y=cant,fill=Residence.City))+ geom_histogram(stat = "identity")
+```
+
+* Top 10 causas de accidente en el anio 2016
+```{r}
+query29<-datos %>% filter(ImmediateCauseA!="",anio==2016) %>% group_by(ImmediateCauseA) %>% summarise(cant=n()) %>%
+  arrange(desc(cant)) %>% slice(1:10)
+ggplot(query29,aes(x=ImmediateCauseA,y=cant,fill=ImmediateCauseA))+ geom_histogram(stat = "identity")
+```
+

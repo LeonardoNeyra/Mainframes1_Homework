@@ -1,0 +1,54 @@
+#Install packages
+#install.packages("shiny")
+#install.packages("plotly")
+
+#Add libraries
+library("plotly")
+library("shiny")
+library("dplyr")
+library("ggplot2")
+library("janitor")
+
+#Leer dataset
+#Obtenido de:
+dat<-read.csv("Dataset/City_Employee_Salaries_November_2017.csv")
+
+#Limpieza
+colnames(dat)<-c("Name","Unit","Department","JobTitle","Annual_RT","HourlyRate","Full_Part","Reg_Temp","FID")
+dat<-dat %>% filter(Name!="")
+
+opc<-c("query1","query2","query3","query4","query5","query6","query7","query8","query9","query10",
+       "query11","query12","query13","query14","query15","query16","query17","query18","query19","query20")
+
+#Consultas
+#Query1
+query01<-dat %>% group_by(Unit) %>% summarise(total=n())
+
+#Definicion de UI
+ui<-fluidPage(
+  titlePanel("Consultas con Ploty & Shiny"),
+  sidebarPanel(
+    titlePanel("Ingresos - Input"),
+    selectInput(inputId = "entrada",label = "Elige una consulta",choices = opc)
+  ),
+  mainPanel(
+    plotOutput("plot")
+  )
+)
+
+#Definicion de servidor
+server<-function(input,output) {
+  
+  output$plot<-renderPlotly({
+    plot_ly(query01,x=query01$Unit,y=query01$total,type="bar")
+    #plot_ly(mtcars, x = ~mpg, y = ~wt)
+    #plot_ly(input$entrada, x = entrada$Unit, y = entrada$total, type = "bar")
+  })
+  #output$plotSalida<-renderPlotly({hist(rnorm(2))})
+  #options(warn = -1)
+}
+
+#Run the application
+shinyApp(ui,server)
+
+
